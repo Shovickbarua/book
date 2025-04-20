@@ -1,62 +1,43 @@
 "use client";
+import React, { useState } from "react";
 import BookApi from "@/api/BookApi";
-import React, { useEffect, useState } from "react";
+import SearchInput from "@/components/SearchInput";
+import BookList from "@/components/BookList";
 
-const Page = () => {
-    const [query, setQuery] = useState("");
-    const [data, setData] = useState([]);
+const HomePage = () => {
+  const [query, setQuery] = useState("");
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const getBook = async () => {
-        const res = await BookApi.search(query);
-        if (res.success) {
-            // console.log('first', res);
-            setData(res.data.docs); 
-        }
-    };
-    return (
-        <div className="p-4">
-            <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search"
-                className="border-2 border-gray-300 rounded-md p-2 mb-4 mr-2"
-            />
-            <button
-                onClick={getBook}
-                className="bg-blue-500 text-white rounded-md p-2 mb-4"
-            >
-                Search
-            </button>
+  const handleSearch = async () => {
+    setLoading(true);
+    setError("");
 
-            <table className="table-auto w-full border mt-4">
-                <thead>
-                    <tr className="bg-gray-200">
-                        <th className="border px-4 py-2">Title</th>
-                        <th className="border px-4 py-2">Author</th>
-                        <th className="border px-4 py-2">First Published</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.length > 0 ? (
-                        data.map((book, index) => (
-                            <tr key={index}>
-                                <td className="border px-4 py-2">{book.title}</td>
-                                <td className="border px-4 py-2">{book.author_name?.[0] || "N/A"}</td>
-                                <td className="border px-4 py-2">{book.first_publish_year || "N/A"}</td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td className="border px-4 py-2" colSpan="3">
-                                No results found.
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
+    const res = await BookApi.search(query);
+      if (res.success) {
+        setBooks(res.data.docs);
+      } else {
+        setError(res.message);
+        setBooks([]);
+      }
+    setLoading(false);
+  };
+
+  return (
+    <main className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        Open Library Book Search
+      </h1>
+
+      <SearchInput query={query} onChange={setQuery} onSearch={handleSearch} />
+
+      {loading && <p className="text-center text-gray-600">Loading...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
+
+      <BookList books={books} />
+    </main>
+  );
 };
 
-export default Page;
+export default HomePage;
